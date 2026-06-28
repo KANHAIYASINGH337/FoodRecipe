@@ -14,6 +14,8 @@ app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = [
   process.env.CLIENT_URL || "http://localhost:3000",
   "https://concerned-picture-9849-frontend.vercel.app",
+  "https://food-recipe-seven-kappa.vercel.app",
+  "https://food-recipe-c53n0nr5l-kanhaiyasingh337s-projects.vercel.app",
 ];
 
 app.use(
