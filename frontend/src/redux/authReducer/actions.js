@@ -225,7 +225,7 @@ export const getUserRecipes = (id, token) => (dispatch) => {
 */
 
 export const getAllRecipes = (token) => {
-  // Feature disabled: backend endpoint /api/recipe/getAllRecipe not available
+  // Feature disabled: backend endpoint /api/recipes not available
   console.log("Get all recipes feature disabled");
   return Promise.resolve();
 };
@@ -238,7 +238,7 @@ export const getAllRecipes = (token) => {
     },
   };
   return axios
-    .get(`${process.env.REACT_APP_API_URL}/recipe/getAllRecipe`, config)
+    .get(`${process.env.REACT_APP_API_URL}/recipes`, config)
     .then((res) => {
       console.log(res.data);
     })

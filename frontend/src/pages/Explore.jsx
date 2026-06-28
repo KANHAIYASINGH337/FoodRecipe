@@ -89,7 +89,7 @@ export const Explore = () => {
     };
 
     axios
-      .get(`${process.env.REACT_APP_API_URL}/recipe/getAllRecipe`, {
+      .get(`${process.env.REACT_APP_API_URL}/recipes`, {
         params: {
           impression: impression,
           veg: selectedOption,

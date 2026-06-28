@@ -14,12 +14,8 @@ import {
     TabPanel,
     TabPanels,
     Tooltip,
-    ButtonGroup,
-    IconButton,
     Divider,
-    useEditableControls,
   } from "@chakra-ui/react";
-  import { CheckIcon, CloseIcon, EditIcon } from "@chakra-ui/icons";
   import React, { useEffect, useState } from "react";
   import { useNavigate, useParams } from "react-router-dom";
   import axios from "axios";
@@ -181,24 +177,3 @@ console.log(user)
       </Container>
     );
   };
-  
-  function EditableControls() {
-    const {
-      isEditing,
-      getSubmitButtonProps,
-      getCancelButtonProps,
-      getEditButtonProps,
-    } = useEditableControls();
-  
-    return isEditing ? (
-      <ButtonGroup justifyContent="center" size="sm">
-        <IconButton icon={<CheckIcon />} {...getSubmitButtonProps()} />
-        <IconButton icon={<CloseIcon />} {...getCancelButtonProps()} />
-      </ButtonGroup>
-    ) : (
-      <Flex justifyContent="center">
-        <IconButton size="sm" icon={<EditIcon />} {...getEditButtonProps()} />
-      </Flex>
-    );
-  }
-  

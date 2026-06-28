@@ -149,7 +149,7 @@ const Admin = () => {
     };
 
     axios
-      .get(`${process.env.REACT_APP_API_URL}/recipe/getAllRecipe`, config)
+      .get(`${process.env.REACT_APP_API_URL}/recipes`, config)
       .then((res) => {
         setRecipe(res.data);
       })
