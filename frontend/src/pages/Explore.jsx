@@ -307,7 +307,7 @@ export const Explore = () => {
                       src={`${process.env.REACT_APP_API_URL}/${ele.images[0]}`}
                       alt="Card"
                     /> */}
-                    <Carousel height={"300px"} images={ele?.images} />
+                    <Image src={ele?.image} width="100%" height="200px" objectFit="cover" alt={ele?.title} />
                   </CardHeader>
                   <Divider w="90%" mx="auto"></Divider>
                   <Box p="1rem">
@@ -333,7 +333,7 @@ export const Explore = () => {
                         fontWeight="bold"
                         color="primary.500"
                       >
-                        {ele?.cuisine[0]}
+                        {ele?.cuisine}
                       </Text>
                       <Flex mt={3} flexWrap="wrap" gap={3}>
                         {ele?.tags?.length > 0 &&
