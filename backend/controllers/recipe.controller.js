@@ -31,3 +31,14 @@ exports.singleRecipe = async (req, res) => {
   const recipe = await Recipe.findById(req.params.id);
   res.json(recipe);
 };
+// FETCH RECIPES FROM SPOONACULAR
+exports.fetchExternalRecipes = async (req, res) => {
+  try {
+    const recipes = await getRecipesFromAPI();
+    res.json(recipes);
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch recipes"
+    });
+  }
+};
