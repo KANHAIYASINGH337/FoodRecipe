@@ -13,5 +13,6 @@ router.post("/", auth, addRecipe);
 router.get("/", getRecipes);
 router.get("/:id", singleRecipe);
 router.patch("/like/:id", auth, likeRecipe);
+router.get("/external", fetchExternalRecipes);
 
 module.exports = router;
