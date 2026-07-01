@@ -1,4 +1,5 @@
 const Recipe = require("../models/Recipe_model");
+const { getRecipesFromAPI } = require("../services/spoonacular.service");
 
 
 
