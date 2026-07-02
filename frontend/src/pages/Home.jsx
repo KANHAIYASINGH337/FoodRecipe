@@ -107,26 +107,39 @@ export const Home = () => {
         <Box className="cover">
           <div className="hero-content" style={{ paddingInline: "1rem" }}>
             <Heading
-              as="h1"
-              fontSize={{ lg: "3rem", md: "2rem", base: "1.5rem" }}
-              fontWeight={{ lg: "800", md: "700", base: "600" }}
-              textTransform="uppercase"
-              textAlign="center"
-              noOfLines={2}
-              mb="1rem"
-              textShadow="2px 2px 4px rgba(0,0,0,0.3)"
-              color="white"
-            >
+  as="h1"
+  fontSize={{
+    lg: "4rem",
+    md: "3rem",
+    base: "2rem",
+  }}
+  fontWeight="800"
+  lineHeight="1.1"
+  letterSpacing="-1px"
+  textTransform="uppercase"
+  textAlign="center"
+  mb="1rem"
+  textShadow="2px 2px 8px rgba(0,0,0,0.25)"
+  color="white"
+>
+ 
               Healthy Cooking Recipes <br />
               and the right Nutrition.
             </Heading>
-            <Text textAlign="center" mb="2rem" color="white" fontWeight="500">
+            <Text
+  textAlign="center"
+  mb="2rem"
+  color="white"
+  fontWeight="500"
+  fontSize={{ lg: "1.2rem", md: "1rem", base: "0.95rem" }}
+  >
               Browse Through Over 6500 Tasty Recipes
             </Text>
             <Button>MORE RECIPES</Button>
             <Grid
-              mt="3rem"
-              width={{ xl: "100%", lg: "80%", md: "60%", base: "60%" }}
+            mt="3rem"
+            width="100%"
+            maxW="1200px"
               templateColumns={{
                 lg: "repeat(3, 1fr)",
                 md: "repeat(2,1fr)",
@@ -135,7 +148,7 @@ export const Home = () => {
               mx={{ base: "auto" }}
               justifyContent="center"
               alignItems={"center"}
-              gap={{ lg: "3rem", md: "2rem", base: "1rem" }}
+              gap={{ lg: "2rem", md: "1.5rem", base: "1rem" }}
             >
               {getRecipesToDisplay().map((el, i) => {
                 return (
@@ -269,30 +282,48 @@ export const Home = () => {
 const DIV = styled.div`
   .cover {
     width: 100%;
-    height: 90vh;
+    min-height: 100vh;
+    padding: 120px 20px 80px;
     text-align: center;
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, #fb8500 0%, #ffb703 25%, #8ecae6 75%, #219ebc 100%);
-    .hero-content {
-      position: absolute;
-      width: min(80rem, 100%);
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 11;
-    }
-    &::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.1) 100%);
-      z-index: 1;
-    }
+
+    background: linear-gradient(
+      135deg,
+      #fb8500 0%,
+      #ffb703 25%,
+      #8ecae6 75%,
+      #219ebc 100%
+    );
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
+
+  .hero-content {
+    width: min(1200px, 100%);
+    margin: 0 auto;
+    position: relative;
+    z-index: 11;
+  }
+
+  .cover::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.18) 0%,
+      rgba(0, 0, 0, 0.08) 100%
+    );
+    z-index: 1;
+  }
+
   @media screen and (max-width: 768px) {
     .cover {
-      height: 70vh;
+      min-height: auto;
+      padding: 100px 15px 60px;
     }
   }
 `;
