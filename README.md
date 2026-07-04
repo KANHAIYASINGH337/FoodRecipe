@@ -1,4 +1,4 @@
-# Food Recipe App
+#Food Recipe App
 
 🚀 A Full Stack MERN Recipe Sharing Platform for discovering, browsing, and managing recipes through a modern and responsive web interface.
 
