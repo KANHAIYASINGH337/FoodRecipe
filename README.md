@@ -75,6 +75,7 @@ npm install
 npm start
 ```
 
+ 
 ### Backend Setup
 
 ```bash
@@ -82,6 +83,7 @@ cd backend
 npm install
 npm run dev
 ```
+
 
 ---
 
