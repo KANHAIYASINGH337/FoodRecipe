@@ -49,6 +49,7 @@ Food Recipe App is a full-stack web application built using the MERN stack (Mong
 
 ## Project Structure
 
+
 ```text
 FoodRecipe/
 ├── frontend/
