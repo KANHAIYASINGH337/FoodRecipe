@@ -4,15 +4,22 @@ const {
   addRecipe,
   getRecipes,
   likeRecipe,
-  singleRecipe
+  singleRecipe,
+  editRecipe,
+  deleteRecipe,
+  getMyRecipes,
+  fetchExternalRecipes,
 } = require("../controllers/recipe.controller");
 
 const router = express.Router();
 
-router.post("/", auth, addRecipe);
-router.get("/", getRecipes);
-router.get("/:id", singleRecipe);
-router.patch("/like/:id", auth, likeRecipe);
-router.get("/external", fetchExternalRecipes);
+router.get("/", getRecipes);                        // all recipes
+router.get("/my-recipes", auth, getMyRecipes);      // logged in user ki recipes
+router.get("/external", fetchExternalRecipes);      // spoonacular
+router.get("/:id", singleRecipe);                   // single recipe
+router.post("/", auth, addRecipe);                  // add recipe
+router.patch("/like/:id", auth, likeRecipe);        // like
+router.patch("/:id", auth, editRecipe);             // edit
+router.delete("/:id", auth, deleteRecipe);          // delete
 
 module.exports = router;
