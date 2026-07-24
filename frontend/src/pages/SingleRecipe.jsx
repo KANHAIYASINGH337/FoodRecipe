@@ -1,13 +1,19 @@
-import styled from "@emotion/styled";
+import styled from "styled-components";
 import { useEffect, useState } from "react";
-import { Carousel } from "../components/Feed/SingleRecipeCarousel";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { CheckIcon } from "@chakra-ui/icons";
 import {
   Box,
-  Checkbox,
+  Badge,
+  Button,
   Flex,
   Heading,
+  Image,
+  List,
+  ListItem,
+  Text,
+  Divider,
+  Spinner,
   Step,
   StepIcon,
   StepIndicator,
@@ -17,201 +23,172 @@ import {
   StepTitle,
   Stepper,
   Tag,
-  Text,
-  SimpleGrid,
-  List,
-  ListItem,
-  VStack,
-  Divider,
-  Avatar,
 } from "@chakra-ui/react";
-import { useSelector } from "react-redux";
-import { getUserDetailsForSingleRecipe } from "../redux/authReducer/actions";
-import { getSingleRecipe } from "../redux/recipeReducer/actions";
 import axios from "axios";
 
 function SingleRecipe() {
   const { postId } = useParams();
-  const [owner, setOwner] = useState({});
-  const [recipe, setRecipe] = useState({});
-
-  const token =
-    useSelector((store) => store.authReducer.token) ||
-    localStorage.getItem("token");
+  const navigate = useNavigate();
+  const [recipe, setRecipe] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
+    setIsLoading(true);
     axios
-      .get(
-        `${process.env.REACT_APP_API_URL}/recipe/getSingleRecipe/${postId}`,
-        config
-      )
+      .get(`${process.env.REACT_APP_API_URL}/api/recipes/${postId}`)
       .then((res) => {
-        // console.log(res.data)
-        setRecipe(res?.data);
-        setOwner(res.data.userId);
-        return res.data;
+        setRecipe(res.data);
+        setIsLoading(false);
       })
       .catch((err) => {
         console.log(err);
+        setIsLoading(false);
       });
-  }, []);
+  }, [postId]);
 
-  console.log("Recipe", recipe);
-  console.log("Owner", owner);
-
-  if (!recipe.title) {
-    return <h1>Loading..</h1>;
+  if (isLoading) {
+    return (
+      <Flex justify="center" align="center" minH="60vh">
+        <Spinner size="xl" color="orange.400" thickness="4px" />
+      </Flex>
+    );
   }
 
+  if (!recipe) {
+    return (
+      <Flex justify="center" align="center" direction="column" minH="60vh" gap="1rem">
+        <Text fontSize="3rem">😕</Text>
+        <Heading size="md">Recipe not found</Heading>
+        <Button colorScheme="orange" onClick={() => navigate("/explore")}>
+          Back to Explore
+        </Button>
+      </Flex>
+    );
+  }
+
+  const ingredients = recipe.ingredients
+    ? recipe.ingredients.split(",").map((i) => i.trim()).filter(Boolean)
+    : [];
+
+  const instructions = recipe.instructions
+    ? recipe.instructions.split(".").map((i) => i.trim()).filter(Boolean)
+    : [];
+
   return (
-    <>
-      <DIV>
-        <Flex gap="1rem" justifyContent="space-between" mb="2rem">
-          <Box width={"55%"}>
-            <Carousel height="100%" images={recipe?.images} />
-            <Divider mt="2rem" />
-            <Box>
-              <Heading textTransform="uppercase" size="lg" my="2rem">
-                Ingredients
-              </Heading>
-              <VStack textAlign="left" align="start">
-                <List
-                  w="100%"
-                  display="grid"
-                  gridTemplateColumns="repeat(auto-fill, minmax(200px, 1fr))"
-                  gap={4}
+    <DIV>
+      {/* Back Button */}
+      <Button
+        variant="ghost"
+        colorScheme="orange"
+        mb="1.5rem"
+        onClick={() => navigate(-1)}
+      >
+        ← Back
+      </Button>
+
+      <Flex gap="2rem" direction={{ base: "column", md: "row" }}>
+        {/* Left: Image + Ingredients */}
+        <Box flex={1}>
+          <Image
+            src={recipe.image || "https://via.placeholder.com/600x400?text=No+Image"}
+            alt={recipe.title}
+            borderRadius="16px"
+            w="100%"
+            maxH="400px"
+            objectFit="cover"
+            onError={(e) => { e.target.src = "https://via.placeholder.com/600x400?text=No+Image"; }}
+          />
+
+          <Divider my="1.5rem" />
+
+          <Heading size="md" textTransform="uppercase" mb="1rem">
+            🧂 Ingredients
+          </Heading>
+          <List display="grid" gridTemplateColumns="repeat(auto-fill, minmax(180px, 1fr))" gap={3}>
+            {ingredients.map((ing, i) => (
+              <ListItem key={i} display="flex" alignItems="center" gap="0.5rem">
+                <Box as={CheckIcon} color="green.500" w={4} h={4} flexShrink={0} />
+                <Text fontSize="sm">{ing}</Text>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+
+        {/* Right: Details + Instructions */}
+        <Box flex={1}>
+          {/* Recipe Info */}
+          <Box bg="white" borderRadius="16px" p="1.5rem" boxShadow="md" mb="1.5rem">
+            <Heading size="lg" textTransform="uppercase" mb="0.75rem">
+              {recipe.title}
+            </Heading>
+
+            <Flex gap="0.5rem" flexWrap="wrap" mb="1rem">
+              {recipe.vegOrNonVeg && (
+                <Badge colorScheme={recipe.vegOrNonVeg === "veg" ? "green" : "red"} fontSize="0.8rem" px="2" py="1">
+                  {recipe.vegOrNonVeg === "veg" ? "🥦 Veg" : "🍗 Non-Veg"}
+                </Badge>
+              )}
+              {recipe.cuisine && (
+                <Badge colorScheme="blue" fontSize="0.8rem" px="2" py="1">
+                  {recipe.cuisine}
+                </Badge>
+              )}
+              {recipe.difficulty && (
+                <Badge
+                  colorScheme={recipe.difficulty === "Easy" ? "green" : recipe.difficulty === "Medium" ? "orange" : "red"}
+                  fontSize="0.8rem" px="2" py="1"
                 >
-                  {recipe?.ingredients.length > 0 &&
-                    recipe.ingredients.map((ele, ind) => (
-                      <ListItem key={ind} display="flex" alignItems="center">
-                        <Box
-                          as={CheckIcon}
-                          w={5}
-                          h={5}
-                          color="green.500"
-                          mr={2}
-                        />
-                        <Text fontSize="xs">{ele}</Text>
-                      </ListItem>
-                    ))}
-                </List>
-              </VStack>
-            </Box>
-          </Box>
-          <Box
-            width={"45%"}
-            p={"1rem"}
-            display="flex"
-            gap="1rem"
-            flexDirection={"column"}
-          >
-            {/* User details image, name, city */}
-            <Flex
-              size="2xl"
-              gap={"1rem"}
-              alignItems={"center"}
-              justifyContent={"flex-start"}
-            >
-              <Avatar
-                size="2xl"
-                src={`${process.env.REACT_APP_API_URL}/${owner.profileImage}`}
-              />
-              <Box>
-                <Text
-                  fontSize={"xl"}
-                  fontWeight={"bolder"}
-                  textTransform={"uppercase"}
-                >
-                  {owner?.name}
-                </Text>
-                <Flex alignItems={"flex-end"}>
-                  <svg
-                    width="40"
-                    height="40"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      fill="#fb8500"
-                      d="M12 11.5A2.5 2.5 0 0 1 9.5 9A2.5 2.5 0 0 1 12 6.5A2.5 2.5 0 0 1 14.5 9a2.5 2.5 0 0 1-2.5 2.5M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Z"
-                    />
-                  </svg>
-                  <Text fontSize={"lg"} textTransform={"uppercase"}>
-                    {owner?.city}
-                  </Text>
-                </Flex>
-              </Box>
+                  {recipe.difficulty}
+                </Badge>
+              )}
             </Flex>
 
-            {/* Recipe Information */}
-            <Flex flexDir={"column"} mt={5} gap={3}>
-              <Flex gap={"1rem"} alignItems={"center"}>
-                <Heading textTransform={"uppercase"} fontSize={"2xl"}>
-                  {recipe?.title}
-                </Heading>
-                <svg
-                  width="30"
-                  height="30"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fill={recipe?.veg ? "#10b981" : "#ea580c"}
-                    d="M20 4v16H4V4h16m2-2H2v20h20V2M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6s6-2.69 6-6s-2.69-6-6-6Z"
-                  />
-                </svg>
-              </Flex>
-              <Flex alighItems="center" gap={3}>
-                <svg
-                  width="33"
-                  height="33"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fill="#000000"
-                    d="m20 15l2-2v5a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h13l-2 2H4v12h16v-3zm2.44-8.56l-.88-.88a1.5 1.5 0 0 0-2.12 0L12 13v2H6v2h9v-1l7.44-7.44a1.5 1.5 0 0 0 0-2.12z"
-                  />
-                </svg>
-                <Text>{recipe?.description}</Text>
-              </Flex>
-              <Flex alighItems="center" gap={3}>
-                <svg
-                  width="23"
-                  height="23"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    fill="#000000"
-                    d="M21 15c0-4.625-3.507-8.441-8-8.941V4h-2v2.059c-4.493.5-8 4.316-8 8.941v2h18v-2zM2 18h20v2H2z"
-                  />
-                </svg>{" "}
-                <Text>{recipe.cuisine[0]}</Text>
-              </Flex>
+            <Flex gap="1.5rem" flexWrap="wrap" color="gray.600" fontSize="sm" mb="1rem">
+              {recipe.cookingTime && (
+                <Flex align="center" gap="0.5rem">
+                  <Text fontSize="1.2rem">⏱</Text>
+                  <Box>
+                    <Text fontWeight="600">{recipe.cookingTime} min</Text>
+                    <Text fontSize="xs" color="gray.400">Cook Time</Text>
+                  </Box>
+                </Flex>
+              )}
+              {recipe.calories && (
+                <Flex align="center" gap="0.5rem">
+                  <Text fontSize="1.2rem">🔥</Text>
+                  <Box>
+                    <Text fontWeight="600">{recipe.calories} cal</Text>
+                    <Text fontSize="xs" color="gray.400">Calories</Text>
+                  </Box>
+                </Flex>
+              )}
+              {recipe.likes > 0 && (
+                <Flex align="center" gap="0.5rem">
+                  <Text fontSize="1.2rem">❤️</Text>
+                  <Box>
+                    <Text fontWeight="600">{recipe.likes}</Text>
+                    <Text fontSize="xs" color="gray.400">Likes</Text>
+                  </Box>
+                </Flex>
+              )}
             </Flex>
-            <Flex gap={4} my={3}>
-              {recipe?.tags?.length > 0 &&
-                recipe?.tags?.map((ele, index) => (
-                  <Tag key={index} size="xl" p="1rem">
-                    {ele}
-                  </Tag>
-                ))}
-            </Flex>
-            <Divider />
-            <Flex height="max-content" flexGrow={1} direction={"column"}>
-              <Heading textTransform={"uppercase"} mb="2rem">
-                Instructions
-              </Heading>
-              <Stepper orientation="vertical" h="100%">
-                {recipe?.instructions.map((step, index) => (
-                  <Step key={index}>
+
+            {recipe.createdBy?.name && (
+              <Text fontSize="sm" color="gray.500">
+                👨‍🍳 By <strong>{recipe.createdBy.name}</strong>
+              </Text>
+            )}
+          </Box>
+
+          {/* Instructions */}
+          <Box bg="white" borderRadius="16px" p="1.5rem" boxShadow="md">
+            <Heading size="md" textTransform="uppercase" mb="1.5rem">
+              📋 Instructions
+            </Heading>
+            {instructions.length > 0 ? (
+              <Stepper orientation="vertical" gap="0" index={-1}>
+                {instructions.map((step, i) => (
+                  <Step key={i}>
                     <StepIndicator>
                       <StepStatus
                         complete={<StepIcon />}
@@ -219,28 +196,33 @@ function SingleRecipe() {
                         active={<StepNumber />}
                       />
                     </StepIndicator>
-                    <StepSeparator />
-                    <Box>
-                      <StepTitle>{step}</StepTitle>
+                    <Box pb="1.5rem" pl="0.5rem">
+                      <StepTitle>
+                        <Text fontSize="sm">{step}</Text>
+                      </StepTitle>
                     </Box>
+                    <StepSeparator />
                   </Step>
                 ))}
               </Stepper>
-            </Flex>
+            ) : (
+              <Text color="gray.500" fontSize="sm">{recipe.instructions}</Text>
+            )}
           </Box>
-        </Flex>
-      </DIV>
-      {/* Recipe Ingredients */}
-    </>
+        </Box>
+      </Flex>
+    </DIV>
   );
 }
 
 export default SingleRecipe;
 
 const DIV = styled.div`
-  width: 90%;
-  margin: 5rem auto 10rem auto;
-  @media screen and (max-width: 768px) {
-    /* flex-direction: column; */
+  width: min(80rem, 100%);
+  margin: 2rem auto 5rem;
+  padding: 0 1.25rem;
+
+  @media (max-width: 768px) {
+    margin: 1rem auto 3rem;
   }
 `;
