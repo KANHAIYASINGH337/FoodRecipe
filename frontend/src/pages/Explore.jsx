@@ -1,8 +1,12 @@
 import {
   Box,
   Button,
+  Card,
+  CardFooter,
+  CardHeader,
+  Divider,
+  Flex,
   Grid,
-  HStack,
   Heading,
   Image,
   Input,
@@ -18,394 +22,268 @@ import {
   Radio,
   RadioGroup,
   Select,
-  Stack,
-  Divider,
-  Tag,
-  TagCloseButton,
-  Text,
-  VStack,
-  useDisclosure,
-  Flex,
-  CardFooter,
-  Card,
-  CardHeader,
   Spinner,
+  Stack,
+  Tag,
+  Text,
+  useDisclosure,
+  Badge,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
 import React, { useEffect, useState } from "react";
-import { getAllRecipes } from "../redux/authReducer/actions";
-import { useSelector } from "react-redux";
 import axios from "axios";
-import FeedCard from "../components/Feed/FeedCard";
-import { BiLike, BiShare } from "react-icons/bi";
-import styled from "@emotion/styled";
+import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { Carousel } from "../components/Feed/SingleRecipeCarousel";
+
+const CUISINES = ["Mexican", "Italian", "Chinese", "Indian", "German", "Greek", "Filipino", "Japanese", "Continental"];
 
 export const Explore = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedCuisines, setSelectedCuisines] = useState([]);
-  const [recipe, setRecipe] = useState([]);
-  const [filter, setFilter] = useState(false);
-  const [impression, setImpression] = useState(null);
   const navigate = useNavigate();
-  const [selectedOption, setSelectedOption] = useState(null);
-  const handleImpressionChange = (event) => {
-    setImpression(event.target.value);
-  };
-  const token =
-    useSelector((store) => store.authReducer.token) ||
-    localStorage.getItem("token");
 
-  const handleFilter = () => {
-    setFilter(!filter);
-    onClose();
-  };
-
-  // Function to set cuisine multiple option
-  const handleCuisineChange = (e) => {
-    const data = e.target.value;
-    const newCuisines = [...selectedCuisines];
-    if (newCuisines.includes(data)) {
-      const index = newCuisines.indexOf(data);
-      newCuisines.splice(index, 1);
-    } else {
-      newCuisines.push(data);
-    }
-    setSelectedCuisines(newCuisines);
-  };
-
-  // Function to remove cuisine
-  const handleCuisineRemove = (cuisine) => {
-    const updatedCuisines = selectedCuisines.filter((item) => item !== cuisine);
-    setSelectedCuisines(updatedCuisines);
-  };
+  const [recipes, setRecipes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [vegFilter, setVegFilter] = useState("all");
+  const [cuisineFilter, setCuisineFilter] = useState("all");
 
   useEffect(() => {
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
+    setIsLoading(true);
     axios
-      .get(`${process.env.REACT_APP_API_URL}/recipes`, {
-        params: {
-          impression: impression,
-          veg: selectedOption,
-        },
-        headers: config.headers,
-      })
+      .get(`${process.env.REACT_APP_API_URL}/api/recipes`)
       .then((res) => {
-        let filteredRecipes = res.data; // Initialize filteredRecipes with all recipes
-
-        if (selectedCuisines.length > 0) {
-          filteredRecipes = res.data.filter((recipe) => {
-            // Check if at least one cuisine in the selectedCuisines array matches the cuisines of the recipe
-            return selectedCuisines.some((selectedCuisine) =>
-              recipe.cuisine.includes(selectedCuisine)
-            );
-          });
-        }
-
-        setRecipe(filteredRecipes); // Set the state with the filtered or unfiltered recipes
-        setSelectedOption(null);
+        setRecipes(res.data);
+        setIsLoading(false);
       })
       .catch((err) => {
         console.log(err);
+        setIsLoading(false);
       });
-  }, [filter]);
+  }, []);
 
-  console.log(recipe, "recipe");
+  const filtered = recipes.filter((r) => {
+    const matchSearch =
+      r.title?.toLowerCase().includes(search.toLowerCase()) ||
+      r.ingredients?.toLowerCase().includes(search.toLowerCase());
+    const matchVeg = vegFilter === "all" || r.vegOrNonVeg === vegFilter;
+    const matchCuisine = cuisineFilter === "all" || r.cuisine === cuisineFilter;
+    return matchSearch && matchVeg && matchCuisine;
+  });
 
-  // All types of cuisine
-  const cuisines = [
-    "Mexican",
-    "Italian",
-    "Chinese",
-    "Indian",
-    "German",
-    "Greek",
-    "Filipino",
-    "Japanese",
-  ];
+  const handleApply = () => onClose();
+
+  const diffColor = { Easy: "green", Medium: "orange", Hard: "red" };
 
   return (
-    <>
-      <Box>
-        {/* Hero section image with heading and a button */}
-        <Box h="45vh" position="relative">
-          <Image
-            src="https://images.unsplash.com/photo-1495546968767-f0573cca821e?auto=format&fit=crop&q=80&w=2831&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-            alt="Hero image"
-            w="100%"
-            h="100%"
-            objectFit="cover"
-          />
-
-          <VStack
-            position="absolute"
-            top="0"
-            left="0"
-            right="0"
-            bottom="0"
-            alignItems="center"
-            justifyContent="space-around"
-            paddingX="7"
+    <Box>
+      {/* Hero */}
+      <Box h={{ base: "35vh", md: "45vh" }} position="relative">
+        <Image
+          src="https://images.unsplash.com/photo-1495546968767-f0573cca821e?auto=format&fit=crop&q=80&w=2831"
+          alt="Hero"
+          w="100%"
+          h="100%"
+          objectFit="cover"
+        />
+        <Flex
+          position="absolute"
+          inset="0"
+          align="center"
+          justify="center"
+          direction="column"
+          gap="1.5rem"
+          bg="rgba(0,0,0,0.35)"
+        >
+          <Heading
+            color="white"
+            textAlign="center"
+            size={{ base: "lg", md: "2xl" }}
+            textShadow="1px 1px 4px black"
+            px="1rem"
           >
-            <Heading
-              as="h3"
-              size="2xl"
-              color="white"
-              textShadow="1px 1px 2px black"
-              textAlign={"center"}
-            >
-              Find the best recipes in a few step!
-            </Heading>
+            Find the best recipes in a few steps!
+          </Heading>
+          <Button colorScheme="orange" size="lg">
+            Search now
+          </Button>
+        </Flex>
+      </Box>
 
-            <Button>Search now</Button>
-          </VStack>
-        </Box>
-        {/* Search bar and advance search option */}
-        <Box boxShadow="0 4px 10px #0002" padding="4">
-          <HStack spacing={5} width="min(80rem,100%)" mx="auto">
-            {/* <Input variant="flushed" placeholder="Flushed" width='30%' /> */}
-            <InputGroup width="30%">
-              <InputLeftElement pointerEvents="none">
-                <SearchIcon color="text" />
-              </InputLeftElement>
-              <Input
-                placeholder="Search for a recipe"
-                border="1px solid"
-                outline="none"
-                borderColor="text"
-                _focus={{ borderColor: "primary.500" }}
-              />
-            </InputGroup>
-            <Heading as="h5" size="md" color="text">
-              Advanced Search
-            </Heading>
-            {/* This is the icon of filter */}
-            <svg
-              onClick={onOpen}
-              width="30"
-              height="30"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-              cursor="pointer"
+      {/* Search Bar */}
+      <Box boxShadow="0 4px 10px #0002" py="1rem" px="1.5rem" bg="white">
+        <Flex
+          gap="1rem"
+          align="center"
+          width="min(80rem,100%)"
+          mx="auto"
+          flexWrap="wrap"
+        >
+          <InputGroup maxW="320px" flex={1}>
+            <InputLeftElement pointerEvents="none">
+              <SearchIcon color="gray.400" />
+            </InputLeftElement>
+            <Input
+              placeholder="Search for a recipe..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </InputGroup>
+          <Button
+            leftIcon={
+              <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#F58332" d="M9 5a1 1 0 1 0 0 2a1 1 0 0 0 0-2zM6.17 5a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-7.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 0 1 0-2h1.17zM15 11a1 1 0 1 0 0 2a1 1 0 0 0 0-2zm-2.83 0a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-1.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 1 1 0-2h7.17z"/>
+              </svg>
+            }
+            variant="outline"
+            colorScheme="orange"
+            onClick={onOpen}
+          >
+            Advanced Search
+          </Button>
+          {(vegFilter !== "all" || cuisineFilter !== "all") && (
+            <Button
+              size="sm"
+              variant="ghost"
+              colorScheme="gray"
+              onClick={() => { setVegFilter("all"); setCuisineFilter("all"); }}
             >
-              <path
-                fill="#F58332"
-                d="M9 5a1 1 0 1 0 0 2a1 1 0 0 0 0-2zM6.17 5a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-7.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 0 1 0-2h1.17zM15 11a1 1 0 1 0 0 2a1 1 0 0 0 0-2zm-2.83 0a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-1.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 1 1 0-2h7.17zM9 17a1 1 0 1 0 0 2a1 1 0 0 0 0-2zm-2.83 0a3.001 3.001 0 0 1 5.66 0H19a1 1 0 1 1 0 2h-7.17a3.001 3.001 0 0 1-5.66 0H5a1 1 0 1 1 0-2h1.17z"
-              />
-            </svg>
-          </HStack>
-          {/* This model will open when selected advance search feature */}
-          <Modal isOpen={isOpen} onClose={onClose}>
-            <ModalOverlay />
-            <ModalContent>
-              <ModalHeader>Modal Title</ModalHeader>
-              <ModalCloseButton />
-              <ModalBody>
-                {/* Options for rating */}
-                <Select
-                  value={impression}
-                  onChange={handleImpressionChange}
-                  placeholder="Recipes with Impressions"
-                >
-                  <option value="asc">Highest</option>
-                  <option value="desc">Lowest</option>
-                </Select>
-                {/* Options for selecting veg / non-veg recipe */}
-                <RadioGroup
-                  marginY="5"
-                  value={selectedOption}
-                  onChange={setSelectedOption}
-                >
-                  <Stack spacing={5} direction="row">
-                    <Radio colorScheme="green" value="veg">
-                      Only Veg
-                    </Radio>
-                    <Radio colorScheme="red" value="non-veg">
-                      Only Non-veg
-                    </Radio>
+              Clear Filters
+            </Button>
+          )}
+          <Text color="gray.500" fontSize="sm" ml="auto">
+            {filtered.length} recipes found
+          </Text>
+        </Flex>
+      </Box>
+
+      {/* Filter Modal */}
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Advanced Search</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Stack spacing="1rem">
+              <Box>
+                <Text fontWeight="600" mb="0.5rem">Type</Text>
+                <RadioGroup value={vegFilter} onChange={setVegFilter}>
+                  <Stack direction="row" spacing={5}>
+                    <Radio colorScheme="gray" value="all">All</Radio>
+                    <Radio colorScheme="green" value="veg">🥦 Veg Only</Radio>
+                    <Radio colorScheme="red" value="non-veg">🍗 Non-Veg Only</Radio>
                   </Stack>
                 </RadioGroup>
-                {/* Select option for single/multiple cuisines */}
-                <Select
-                  placeholder="Select cuisines"
-                  value={cuisines}
-                  onChange={handleCuisineChange}
-                >
-                  {cuisines.map((cuisine) => (
-                    <option key={cuisine + Date.now()} value={cuisine}>
-                      {cuisine}
-                    </option>
+              </Box>
+              <Box>
+                <Text fontWeight="600" mb="0.5rem">Cuisine</Text>
+                <Select value={cuisineFilter} onChange={(e) => setCuisineFilter(e.target.value)}>
+                  <option value="all">All Cuisines</option>
+                  {CUISINES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
                   ))}
                 </Select>
-                {/* This will show the selected cuisines */}
-                <HStack
-                  display={"flex"}
-                  flexWrap={"wrap"}
-                  paddingY="2"
-                  spacing="2"
-                >
-                  {selectedCuisines.map((cuisine) => (
-                    <Tag key={cuisine} size="md">
-                      {cuisine}
-                      <TagCloseButton
-                        onClick={() => handleCuisineRemove(cuisine)}
-                      />
-                    </Tag>
-                  ))}
-                </HStack>
-              </ModalBody>
-              <ModalFooter>
-                <Button
-                  border={"1px solid"}
-                  borderColor={"secondary"}
-                  color="secondary"
-                  variant="outline"
-                  mr="1rem"
-                  onClick={onClose}
-                >
-                  Close
-                </Button>
-                <Button variant="solid" onClick={handleFilter}>
-                  Apply
-                </Button>
-              </ModalFooter>
-            </ModalContent>
-          </Modal>
-        </Box>
-        {/* Mapping all recipe */}
-        <DIV>
-          {recipe.length == 0 ? (
-            <Spinner
-              mx="auto"
-              thickness="4px"
-              speed="0.65s"
-              emptyColor="gray.200"
-              color="primary.500"
-              size="xl"
-            />
-          ) : (
-            recipe?.length > 0 &&
-            recipe.map((ele, index) => (
-              <Card
-                textAlign={"left"}
-                key={index}
-                boxShadow={"lg"}
-                borderRadius="1rem"
-                transition="0.2s ease-in"
-                _hover={{ boxShadow: "xl", transform: "scale(1.01)" }}
-              >
-                <Box borderWidth="0" borderRadius="md" overflow="hidden">
-                  <CardHeader>
-                    {/* <Image
-                      width="100%"
-                      src={`${process.env.REACT_APP_API_URL}/${ele.images[0]}`}
-                      alt="Card"
-                    /> */}
-                    <Image src={ele?.image} width="100%" height="200px" objectFit="cover" alt={ele?.title} />
-                  </CardHeader>
-                  <Divider w="90%" mx="auto"></Divider>
-                  <Box p="1rem">
-                    <Heading
-                      fontSize="lg"
-                      m={0}
-                      lineHeight={1.1}
-                      textTransform="uppercase"
-                      fontWeight="700"
-                    >
-                      {ele.title}
-                    </Heading>
-                    <Flex
-                      align="center"
-                      justifyContent="space-between"
-                      py={1}
-                      mb="0.5rem"
-                    >
-                      <Text
-                        my={3}
-                        fontFamily={"Kaushan Script"}
-                        fontSize="md"
-                        fontWeight="bold"
-                        color="primary.500"
-                      >
-                        {ele?.cuisine}
-                      </Text>
-                      <Flex mt={3} flexWrap="wrap" gap={3}>
-                        {ele?.tags?.length > 0 &&
-                          ele?.tags.map((e, index) => (
-                            <Tag key={index}>{e}</Tag>
-                          ))}
-                      </Flex>
-                    </Flex>
-                    <Text fontSize="sm" mb="1rem">
-                      {ele.description}
-                    </Text>
-                    <CardFooter
-                      p="0"
-                      justify="flex-start"
-                      gap="1rem"
-                      flexWrap="wrap"
-                      sx={{
-                        "& > button": {
-                          minW: "136px",
-                        },
-                      }}
-                    >
-                      <Button
-                        flex={{ base: "1", md: "0.25" }}
-                        variant="outline"
-                        leftIcon={<BiShare />}
-                        border={"1px solid"}
-                        borderColor={"secondary"}
-                        color="secondary"
-                        onClick={() => navigate(`/recipe/${ele._id}`)}
-                      >
-                        Details
-                      </Button>
-                    </CardFooter>
-                  </Box>
-                </Box>
-              </Card>
-            ))
-          )}
-        </DIV>
-      </Box>
-    </>
+              </Box>
+            </Stack>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="outline" mr="1rem" onClick={onClose}>Close</Button>
+            <Button colorScheme="orange" onClick={handleApply}>Apply</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Recipe Grid */}
+      <DIV>
+        {isLoading ? (
+          <Flex justify="center" align="center" py="5rem" gridColumn="1/-1">
+            <Spinner thickness="4px" speed="0.65s" color="orange.400" size="xl" />
+          </Flex>
+        ) : filtered.length === 0 ? (
+          <Flex direction="column" align="center" py="5rem" gridColumn="1/-1" color="gray.400">
+            <Text fontSize="3rem">🍽️</Text>
+            <Text fontWeight="600" mt="1rem">No recipes found</Text>
+            <Text fontSize="sm">Try adjusting your search or filters</Text>
+          </Flex>
+        ) : (
+          filtered.map((recipe) => (
+            <Card
+              key={recipe._id}
+              borderRadius="16px"
+              overflow="hidden"
+              boxShadow="md"
+              transition="all 0.2s ease"
+              _hover={{ boxShadow: "xl", transform: "translateY(-4px)" }}
+              cursor="pointer"
+              onClick={() => navigate(`/recipe/${recipe._id}`)}
+            >
+              <CardHeader p="0">
+                <Image
+                  src={recipe.image || "https://via.placeholder.com/400x200?text=No+Image"}
+                  alt={recipe.title}
+                  w="100%"
+                  h="200px"
+                  objectFit="cover"
+                  onError={(e) => { e.target.src = "https://via.placeholder.com/400x200?text=No+Image"; }}
+                />
+              </CardHeader>
+              <Box p="1rem">
+                <Heading fontSize="md" mb="0.5rem" noOfLines={1} textTransform="uppercase">
+                  {recipe.title}
+                </Heading>
+                <Flex gap="0.5rem" flexWrap="wrap" mb="0.75rem">
+                  {recipe.cuisine && <Badge colorScheme="blue">{recipe.cuisine}</Badge>}
+                  {recipe.vegOrNonVeg && (
+                    <Badge colorScheme={recipe.vegOrNonVeg === "veg" ? "green" : "red"}>
+                      {recipe.vegOrNonVeg === "veg" ? "🥦 Veg" : "🍗 Non-Veg"}
+                    </Badge>
+                  )}
+                  {recipe.difficulty && (
+                    <Badge colorScheme={diffColor[recipe.difficulty] || "gray"}>
+                      {recipe.difficulty}
+                    </Badge>
+                  )}
+                </Flex>
+                <Flex gap="1rem" color="gray.500" fontSize="sm" mb="0.75rem">
+                  {recipe.cookingTime && <Text>⏱ {recipe.cookingTime} min</Text>}
+                  {recipe.calories && <Text>🔥 {recipe.calories} cal</Text>}
+                  {recipe.likes > 0 && <Text>❤️ {recipe.likes}</Text>}
+                </Flex>
+                <CardFooter p="0">
+                  <Button
+                    size="sm"
+                    colorScheme="orange"
+                    variant="outline"
+                    w="full"
+                    onClick={(e) => { e.stopPropagation(); navigate(`/recipe/${recipe._id}`); }}
+                  >
+                    View Details
+                  </Button>
+                </CardFooter>
+              </Box>
+            </Card>
+          ))
+        )}
+      </DIV>
+    </Box>
   );
 };
 
 const DIV = styled.div`
-  text-align: center;
-  min-height: 20vh;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   width: min(80rem, 100%);
   margin-inline: auto;
-  padding-block: 5rem;
+  padding: 3rem 1rem;
+
   @media (max-width: 768px) {
-    grid-template-columns: repeat(
-      1,
-      1fr
-    ); /* 1 column on screens up to 768px wide */
+    grid-template-columns: 1fr;
+    padding: 1.5rem 1rem;
   }
 
   @media (min-width: 769px) and (max-width: 1024px) {
-    grid-template-columns: repeat(
-      2,
-      1fr
-    ); /* 2 columns on screens between 769px and 1024px wide */
-  }
-
-  @media (min-width: 1025px) {
-    grid-template-columns: repeat(
-      3,
-      1fr
-    ); /* 3 columns on screens wider than 1024px */
+    grid-template-columns: repeat(2, 1fr);
   }
 `;
+
+export default Explore;
