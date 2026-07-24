@@ -1,4 +1,4 @@
-# Food Recipe App
+## Food Recipe App
 
 🚀 A Full Stack MERN Recipe Sharing Platform for discovering, browsing, and managing recipes through a modern and responsive web interface.
 
@@ -49,6 +49,7 @@ Food Recipe App is a full-stack web application built using the MERN stack (Mong
 
 ## Project Structure
 
+
 ```text
 FoodRecipe/
 ├── frontend/
@@ -75,6 +76,7 @@ npm install
 npm start
 ```
 
+ 
 ### Backend Setup
 
 ```bash
@@ -82,6 +84,7 @@ cd backend
 npm install
 npm run dev
 ```
+
 
 ---
 
