@@ -1,112 +1,110 @@
-import {
-  CREATE_USER_LOADING,
-  CREATE_USER_ERROR,
-  CREATE_USER_SUCCESS,
-  LOGIN_USER_LOADING,
-  LOGIN_USER_ERROR,
-  LOGIN_USER_SUCCESS,
-  RESET,
-} from "./actionTypes";
-import {
-  GET_LOGGEDUSER_LOADING,
-  GET_LOGGEDUSER_ERROR,
-} from "./actionTypes";
 import axios from "axios";
-export const createUser = (newUser, toast, navigate) => async (dispatch) => {
-  dispatch({ type: CREATE_USER_LOADING });
+import {
+  ADDRECIPE_ERROR,
+  ADDRECIPE_LOADING,
+  ADDRECIPE_SUCCESS,
+  GET_FEED_ERROR,
+  GET_FEED_LOADING,
+  GET_FEED_SUCCESS,
+} from "./actionTypes";
+
+const API = process.env.REACT_APP_API_URL;
+
+// GET ALL RECIPES
+export const getAllRecipes = () => async (dispatch) => {
+  dispatch({ type: GET_FEED_LOADING });
   try {
-    const response = await axios.post(
-      `${process.env.REACT_APP_API_URL}/auth/signup`,
-      newUser
-    );
-    // Handle the server response here
-    console.log(response);
-    dispatch({ type: CREATE_USER_SUCCESS });
-    toast({
-      title: "SignUp successful",
-      description: response.data.message || "Account created successfully",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
-    });
-    navigate("/login");
-  } catch (error) {
-    console.log(error);
-    dispatch({ type: CREATE_USER_ERROR });
-    toast({
-      title: "SignUp Failed",
-      description: error.response?.data?.message || "Failed to create account",
-      status: "error",
-      duration: 9000,
-      isClosable: true,
-    });
+    const res = await axios.get(`${API}/api/recipes`);
+    dispatch({ type: GET_FEED_SUCCESS, payload: res.data });
+  } catch (err) {
+    dispatch({ type: GET_FEED_ERROR });
   }
 };
 
-export const loginUser = (userObj, toast, navigate) => async (dispatch) => {
-  dispatch({ type: LOGIN_USER_LOADING });
+// GET MY RECIPES
+export const getMyRecipes = (token) => async (dispatch) => {
+  dispatch({ type: GET_FEED_LOADING });
   try {
-    const response = await axios.post(
-      `${process.env.REACT_APP_API_URL}/auth/login`,
-      userObj,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const res = await axios.get(`${API}/api/recipes/my-recipes`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    dispatch({ type: GET_FEED_SUCCESS, payload: res.data });
+  } catch (err) {
+    dispatch({ type: GET_FEED_ERROR });
+  }
+};
 
-    // Handle the server response here
-    // console.log(response);
-    if (response.data.token) {
-      localStorage.setItem("token", response.data.token);
-      dispatch({ type: LOGIN_USER_SUCCESS, payload: response.data.token });
+// ADD RECIPE
+export const addNewRecipe =
+  (token, recipe, toast, navigate, closeModal) => async (dispatch) => {
+    dispatch({ type: ADDRECIPE_LOADING });
+    try {
+      const res = await axios.post(`${API}/api/recipes`, recipe, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      dispatch({ type: ADDRECIPE_SUCCESS, payload: res.data });
       toast({
-        title: "Login Successful",
-        description: response.data.message || "Welcome back!",
+        title: "Recipe Added!",
         status: "success",
         duration: 3000,
         isClosable: true,
       });
-      navigate("/");
+      if (closeModal) closeModal();
+      if (navigate) navigate("/explore");
+    } catch (err) {
+      dispatch({ type: ADDRECIPE_ERROR });
+      toast({
+        title: "Failed to add recipe",
+        description: err.response?.data?.message || "Something went wrong",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
-  } catch (error) {
-    console.log(error);
-    dispatch({ type: LOGIN_USER_ERROR });
-    toast({
-      title: "Login Failed",
-      description: error.response?.data?.message || "Invalid credentials",
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
-  }
-};
+  };
 
-export const logoutUser = (token, toast, navigate) => async (dispatch) => {
+// EDIT RECIPE
+export const editRecipe =
+  (id, token, updatedData, toast) => async (dispatch) => {
+    try {
+      await axios.patch(`${API}/api/recipes/${id}`, updatedData, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      dispatch(getMyRecipes(token));
+      toast({
+        title: "Recipe Updated!",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (err) {
+      toast({
+        title: "Failed to update recipe",
+        description: err.response?.data?.message || "Something went wrong",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+// DELETE RECIPE
+export const deleteRecipe = (id, token, toast) => async (dispatch) => {
   try {
-    // Clear token from localStorage
-    localStorage.removeItem("token");
-    
-    // Dispatch reset action to clear auth state
-    dispatch({ type: RESET });
-    
-    // Show success toast
+    await axios.delete(`${API}/api/recipes/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    dispatch(getMyRecipes(token));
     toast({
-      title: "Logout Successful",
-      description: "You have been logged out",
+      title: "Recipe Deleted!",
       status: "success",
       duration: 3000,
       isClosable: true,
     });
-    
-    // Redirect to home
-    navigate("/");
-  } catch (error) {
-    console.log("Error while logging out:", error);
+  } catch (err) {
     toast({
-      title: "Logout Error",
-      description: "An error occurred during logout",
+      title: "Failed to delete recipe",
+      description: err.response?.data?.message || "Something went wrong",
       status: "error",
       duration: 3000,
       isClosable: true,
@@ -114,152 +112,16 @@ export const logoutUser = (token, toast, navigate) => async (dispatch) => {
   }
 };
 
-//get data of the loggedin user
-// Feature disabled: backend endpoint /api/users not available
-export const getUserData = (token, toast) => async (dispatch) => {
-  dispatch({ type: GET_LOGGEDUSER_LOADING });
-  // Skip fetching user data for now
-  dispatch({ type: GET_LOGGEDUSER_ERROR });
-};
-
-/*
-export const getUserData = (token, toast) => async (dispatch) => {
-  dispatch({ type: GET_LOGGEDUSER_LOADING });
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
+// LIKE RECIPE
+export const likeRecipe = (id, token) => async (dispatch) => {
   try {
-    const response = await axios.get(
-      `${process.env.REACT_APP_API_URL}/users`,
-      config
+    await axios.patch(
+      `${API}/api/recipes/like/${id}`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
     );
-    console.log(response.data.user);
-    const userWithProfileImage = response.data.user;
-    userWithProfileImage.profileImage = `${process.env.REACT_APP_API_URL}/${userWithProfileImage.profileImage}`;
-    dispatch({ type: GET_LOGGEDUSER_SUCCESS, payload: userWithProfileImage });
-  } catch (error) {
-    console.log("Error fetching user data:", error);
-    dispatch({ type: GET_LOGGEDUSER_ERROR });
-    toast({
-      title: "Failed To Load User Details",
-      description: `${error.response.data.message}`,
-      status: "error",
-      duration: 3000,
-      isClosable: true,
-    });
+    dispatch(getAllRecipes());
+  } catch (err) {
+    console.log("Like failed", err);
   }
 };
-*/
-
-// update user details
-// Feature disabled: backend endpoint /api/users/update not available
-export const updateUserDetails =
-  (id, newData, headers, toast) => (dispatch) => {
-    console.log("Update user details feature disabled");
-  };
-
-/*
-export const updateUserDetails =
-  (id, newData, headers, toast) => (dispatch) => {
-    axios
-      .patch(`${process.env.REACT_APP_API_URL}/users/update/${id}`, newData, {
-        headers: headers,
-      })
-      .then((res) => {
-        console.log(res.data.updatedUser, "data in action from backend");
-        dispatch({
-          type: UPDATE_USER_DETAILS,
-          payload: res.data.updatedUser,
-        });
-        toast({
-          title: "Your data was successfully updated",
-          description: `${res.data.status}`,
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
-      })
-      .catch((err) => {
-        toast({
-          title: "Your data was successfully updated",
-          description: `${err.response.data.message}`,
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      });
-  };
-*/
-
-// Get user recipes
-// Feature disabled: backend endpoint /api/recipe/getMyRecipe not available
-export const getUserRecipes = (id, token) => (dispatch) => {
-  console.log("Get user recipes feature disabled");
-};
-
-/*
-export const getUserRecipes = (id, token) => (dispatch) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  axios
-    .get(
-      `${process.env.REACT_APP_API_URL}/recipe/getMyRecipe?populate=recipes`,
-      config
-    )
-    .then((response) => {
-      console.log(response.data.recipes);
-      dispatch({
-        type: "GET_USER_RECIPES",
-        payload: response.data.recipes,
-      });
-    })
-    .catch((error) => {
-      console.error("Error fetching user recipes:", error);
-    });
-};
-*/
-
-export const getAllRecipes = (token) => {
-  // Feature disabled: backend endpoint /api/recipes not available
-  console.log("Get all recipes feature disabled");
-  return Promise.resolve();
-};
-
-/*
-export const getAllRecipes = (token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-  return axios
-    .get(`${process.env.REACT_APP_API_URL}/recipes`, config)
-    .then((res) => {
-      console.log(res.data);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-};
-*/
-
-// export const getUserDetailsForSingleRecipe = (token, id) => {
-//   const config = {
-//     headers: {
-//       Authorization: `Bearer ${token}`,
-//     },
-//   };
-
-//   return axios.get(`${process.env.REACT_APP_API_URL}/users/${id}`, config)
-//     .then((res) => {
-//       return res.data;
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//     });
-// }
