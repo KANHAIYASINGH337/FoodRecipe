@@ -2,12 +2,14 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log("MongoDB Connected");
+    const connUri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/recipehub";
+    await mongoose.connect(connUri);
+    console.log(`MongoDB Connected: ${mongoose.connection.host || "Local DB"}`);
   } catch (err) {
-    console.error(err);
-    process.exit(1);
+    console.error("MongoDB Connection Error:", err.message);
+    console.log("Tip: Please set MONGO_URI in your environment or Render dashboard.");
   }
 };
 
 module.exports = connectDB;
+
