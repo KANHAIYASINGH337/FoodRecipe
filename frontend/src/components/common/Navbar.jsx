@@ -58,9 +58,11 @@ export const Navbar = () => {
             gap={{ md: "1.5rem", lg: "2rem" }}
           >
             <NavLink to="/explore" label="Explore" current={location.pathname} />
-            <NavLink to="/feed" label="Feed" current={location.pathname} />
             {isAuth && (
-              <NavLink to="/account" label="Account" current={location.pathname} />
+              <>
+                <NavLink to="/feed" label="Feed" current={location.pathname} />
+                <NavLink to="/account" label="Account" current={location.pathname} />
+              </>
             )}
           </Flex>
 
@@ -113,11 +115,14 @@ export const Navbar = () => {
           <Box className="mobile-menu" pb="1rem">
             <Stack spacing="0.5rem" mb="1rem">
               <MobileLink to="/explore" label="Explore" onClick={onToggle} current={location.pathname} />
-              <MobileLink to="/feed" label="Feed" onClick={onToggle} current={location.pathname} />
               {isAuth && (
-                <MobileLink to="/account" label="Account" onClick={onToggle} current={location.pathname} />
+                <>
+                  <MobileLink to="/feed" label="Feed" onClick={onToggle} current={location.pathname} />
+                  <MobileLink to="/account" label="Account" onClick={onToggle} current={location.pathname} />
+                </>
               )}
             </Stack>
+
 
             <Flex gap="0.75rem" px="0.5rem">
               {isAuth ? (
