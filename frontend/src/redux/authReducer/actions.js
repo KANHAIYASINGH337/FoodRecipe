@@ -93,4 +93,30 @@ export const logoutUser = (toast, navigate) => (dispatch) => {
   if (navigate) {
     navigate("/login");
   }
-};
+};
+
+// GET USER DATA
+export const getUserData = (token) => async (dispatch) => {
+  dispatch({ type: AUTH_LOADING });
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    if (user) {
+      dispatch({ type: LOGIN_SUCCESS, payload: { token, user } });
+    }
+  } catch (err) {
+    dispatch({ type: AUTH_ERROR });
+  }
+};
+
+// GET USER RECIPES
+export const getUserRecipes = (userId, token) => async (dispatch) => {
+  try {
+    const res = await axios.get(`${API}/api/recipes/my-recipes`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    dispatch({ type: "GET_FEED_SUCCESS", payload: res.data });
+  } catch (err) {
+    console.log("Error getting user recipes", err);
+  }
+};
+
