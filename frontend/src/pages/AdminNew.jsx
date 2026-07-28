@@ -64,44 +64,38 @@ export default function AdminNew() {
   const [recipe, setRecipe] = useState([]);
   const [section, setSection] = useState(1);
   const navigate = useNavigate();
+  const token = useSelector((store) => store.authReducer.token) || localStorage.getItem("token");
+  const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
   // Get all users
   useEffect(() => {
-    // setLoading(true)
+    if (!token) return;
     const config = {
-      headers: {
-        Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NTQyNjk4N2FlODJkZDg4M2VmZGNmMTAiLCJpYXQiOjE2OTkwMDU5NzF9.2BbpIwnPrvYyP2BY48EDBEVgdq8WaebKYtaXZ0KHgh0`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     };
 
     axios
-      .get(`${process.env.REACT_APP_API_URL}/users/getAllUsers/admin`, config)
+      .get(`${API}/api/admin/users`, config)
       .then((res) => {
         setUser(res.data);
-        // setLoading(false)
       })
       .catch((err) => {
-        console.log(err);
+        console.log("Error fetching admin users:", err);
       });
-  }, []);
+  }, [token, API]);
 
   // Get all recipes
   useEffect(() => {
-    const config = {
-      headers: {
-        Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NTQyNjk4N2FlODJkZDg4M2VmZGNmMTAiLCJpYXQiOjE2OTkwMDU5NzF9.2BbpIwnPrvYyP2BY48EDBEVgdq8WaebKYtaXZ0KHgh0`,
-      },
-    };
-
     axios
-      .get(`${process.env.REACT_APP_API_URL}/recipes`, config)
+      .get(`${API}/api/recipes`)
       .then((res) => {
         setRecipe(res.data);
       })
       .catch((err) => {
-        console.log(err);
+        console.log("Error fetching recipes:", err);
       });
-  }, []);
+  }, [API]);
+
 
   return (
     <Box

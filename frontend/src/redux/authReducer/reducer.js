@@ -1,39 +1,52 @@
 import {
-  ADDRECIPE_ERROR,
-  ADDRECIPE_LOADING,
-  ADDRECIPE_SUCCESS,
-  GET_FEED_ERROR,
-  GET_FEED_LOADING,
-  GET_FEED_SUCCESS,
+  AUTH_LOADING,
+  AUTH_ERROR,
+  LOGIN_SUCCESS,
+  SIGNUP_SUCCESS,
+  LOGOUT_SUCCESS,
 } from "./actionTypes";
 
+const savedToken = localStorage.getItem("token") || "";
+const savedUser = JSON.parse(localStorage.getItem("user") || "null");
+
 const initialState = {
-  recipes: [],
+  isAuth: !!savedToken,
+  token: savedToken,
+  loggedInUser: savedUser,
   isLoading: false,
   isError: false,
 };
 
 export const reducer = (state = initialState, { type, payload }) => {
   switch (type) {
-    case ADDRECIPE_LOADING:
-    case GET_FEED_LOADING:
+    case AUTH_LOADING:
       return { ...state, isLoading: true, isError: false };
 
-    case GET_FEED_SUCCESS:
-      return { ...state, isLoading: false, recipes: payload };
-
-    case ADDRECIPE_SUCCESS:
+    case LOGIN_SUCCESS:
       return {
         ...state,
         isLoading: false,
-        recipes: [payload, ...state.recipes],
+        isAuth: true,
+        token: payload.token,
+        loggedInUser: payload.user,
       };
 
-    case ADDRECIPE_ERROR:
-    case GET_FEED_ERROR:
+    case SIGNUP_SUCCESS:
+      return { ...state, isLoading: false, isError: false };
+
+    case LOGOUT_SUCCESS:
+      return {
+        ...state,
+        isLoading: false,
+        isAuth: false,
+        token: "",
+        loggedInUser: null,
+      };
+
+    case AUTH_ERROR:
       return { ...state, isLoading: false, isError: true };
 
     default:
       return state;
   }
-};
+};

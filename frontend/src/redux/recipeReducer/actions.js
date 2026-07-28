@@ -8,13 +8,13 @@ import {
   GET_FEED_SUCCESS,
 } from "./actionTypes";
 
-const API = process.env.REACT_APP_API_URL;
+const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 // GET ALL RECIPES
-export const getAllRecipes = () => async (dispatch) => {
+export const getAllRecipes = (queryParams = {}) => async (dispatch) => {
   dispatch({ type: GET_FEED_LOADING });
   try {
-    const res = await axios.get(`${API}/api/recipes`);
+    const res = await axios.get(`${API}/api/recipes`, { params: queryParams });
     dispatch({ type: GET_FEED_SUCCESS, payload: res.data });
   } catch (err) {
     dispatch({ type: GET_FEED_ERROR });
@@ -124,4 +124,4 @@ export const likeRecipe = (id, token) => async (dispatch) => {
   } catch (err) {
     console.log("Like failed", err);
   }
-};
+};

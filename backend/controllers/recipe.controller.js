@@ -4,6 +4,11 @@ const { getRecipesFromAPI } = require("../services/spoonacular.service");
 // ADD RECIPE
 exports.addRecipe = async (req, res) => {
   try {
+    const { title, ingredients, instructions } = req.body;
+    if (!title || !ingredients || !instructions) {
+      return res.status(400).json({ message: "Title, ingredients, and instructions are required." });
+    }
+
     const recipe = await Recipe.create({
       ...req.body,
       createdBy: req.user.id,
@@ -14,24 +19,39 @@ exports.addRecipe = async (req, res) => {
   }
 };
 
-// GET ALL RECIPES
+// GET ALL RECIPES (With Search & Filter)
 exports.getRecipes = async (req, res) => {
   try {
-    const recipes = await Recipe.find().populate("createdBy", "name").sort({ createdAt: -1 });
+    const { search, cuisine, vegOrNonVeg } = req.query;
+    let query = {};
+
+    if (search) {
+      query.title = { $regex: search, $options: "i" };
+    }
+    if (cuisine && cuisine !== "all") {
+      query.cuisine = cuisine;
+    }
+    if (vegOrNonVeg && vegOrNonVeg !== "all") {
+      query.vegOrNonVeg = vegOrNonVeg;
+    }
+
+    const recipes = await Recipe.find(query)
+      .populate("createdBy", "name email")
+      .sort({ createdAt: -1 });
     res.json(recipes);
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch recipes" });
+    res.status(500).json({ message: "Failed to fetch recipes", error: err.message });
   }
 };
 
 // SINGLE RECIPE
 exports.singleRecipe = async (req, res) => {
   try {
-    const recipe = await Recipe.findById(req.params.id).populate("createdBy", "name");
+    const recipe = await Recipe.findById(req.params.id).populate("createdBy", "name email");
     if (!recipe) return res.status(404).json({ message: "Recipe not found" });
     res.json(recipe);
   } catch (err) {
-    res.status(500).json({ message: "Error fetching recipe" });
+    res.status(500).json({ message: "Error fetching recipe", error: err.message });
   }
 };
 
@@ -40,28 +60,29 @@ exports.likeRecipe = async (req, res) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ message: "Recipe not found" });
-    recipe.likes += 1;
+    recipe.likes = (recipe.likes || 0) + 1;
     await recipe.save();
-    res.json({ likes: recipe.likes });
+    res.json({ likes: recipe.likes, recipeId: recipe._id });
   } catch (err) {
-    res.status(500).json({ message: "Error liking recipe" });
+    res.status(500).json({ message: "Error liking recipe", error: err.message });
   }
 };
 
-// EDIT RECIPE — only owner can edit
+// EDIT RECIPE — only owner or admin can edit
 exports.editRecipe = async (req, res) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ message: "Recipe not found" });
 
-    if (recipe.createdBy.toString() !== req.user.id) {
+    const ownerId = recipe.createdBy._id ? recipe.createdBy._id.toString() : recipe.createdBy.toString();
+    if (ownerId !== req.user.id && req.user.role !== "admin") {
       return res.status(403).json({ message: "Not authorized to edit this recipe" });
     }
 
     const updated = await Recipe.findByIdAndUpdate(
       req.params.id,
-      { ...req.body },
-      { new: true }
+      { $set: req.body },
+      { new: true, runValidators: true }
     );
     res.json(updated);
   } catch (err) {
@@ -69,13 +90,14 @@ exports.editRecipe = async (req, res) => {
   }
 };
 
-// DELETE RECIPE — only owner can delete
+// DELETE RECIPE — only owner or admin can delete
 exports.deleteRecipe = async (req, res) => {
   try {
     const recipe = await Recipe.findById(req.params.id);
     if (!recipe) return res.status(404).json({ message: "Recipe not found" });
 
-    if (recipe.createdBy.toString() !== req.user.id) {
+    const ownerId = recipe.createdBy._id ? recipe.createdBy._id.toString() : recipe.createdBy.toString();
+    if (ownerId !== req.user.id && req.user.role !== "admin") {
       return res.status(403).json({ message: "Not authorized to delete this recipe" });
     }
 
@@ -86,13 +108,13 @@ exports.deleteRecipe = async (req, res) => {
   }
 };
 
-// GET MY RECIPES — logged in user ki recipes
+// GET MY RECIPES — logged in user recipes
 exports.getMyRecipes = async (req, res) => {
   try {
     const recipes = await Recipe.find({ createdBy: req.user.id }).sort({ createdAt: -1 });
     res.json(recipes);
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch your recipes" });
+    res.status(500).json({ message: "Failed to fetch your recipes", error: err.message });
   }
 };
 
@@ -102,6 +124,6 @@ exports.fetchExternalRecipes = async (req, res) => {
     const recipes = await getRecipesFromAPI();
     res.json(recipes);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch recipes" });
+    res.status(500).json({ message: "Failed to fetch external recipes", error: error.message });
   }
-};
+};

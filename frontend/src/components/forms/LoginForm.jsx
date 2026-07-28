@@ -31,17 +31,20 @@ export const LoginForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    if(email === "admin@gmail.com" && password === "admin")  {
-      navigate("/admin");
-      return
-    }
     e.preventDefault();
-    // Handle form submission logic here
     if (email && password) {
-      let userObj = { email, password };
+      const userObj = { email, password };
       dispatch(loginUser(userObj, toast, navigate));
+    } else {
+      toast({
+        title: "Please enter email and password",
+        status: "warning",
+        duration: 2500,
+        isClosable: true,
+      });
     }
   };
+
 
   return (
     <StyledBox p={4}>

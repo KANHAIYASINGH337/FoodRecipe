@@ -6,44 +6,42 @@ const connectDB = require("./config/db");
 
 const app = express();
 
-// 🔥 BODY PARSER — MUST BE BEFORE ROUTES
+// Body Parser Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// configure CORS to allow frontend origins
-const allowedOrigins = [
-  process.env.CLIENT_URL || "http://localhost:3000",
-  "https://concerned-picture-9849-frontend.vercel.app",
-  "https://food-recipe-seven-kappa.vercel.app",
-  "https://food-recipe-c53n0nr5l-kanhaiyasingh337s-projects.vercel.app",
-];
-
+// Dynamic CORS configuration allowing localhost & Vercel deployment URLs
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin like mobile apps or curl
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg = `The CORS policy for this site does not allow access from the specified Origin.`;
-        return callback(new Error(msg), false);
+      if (
+        origin.startsWith("http://localhost:") ||
+        origin.endsWith(".vercel.app") ||
+        (process.env.CLIENT_URL && origin === process.env.CLIENT_URL)
+      ) {
+        return callback(null, true);
       }
-      return callback(null, true);
+      return callback(new Error("CORS policy violation"), false);
     },
-    methods: ["GET", "POST", "PATCH", "DELETE"],
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
 
+// Connect to MongoDB
 connectDB();
 
-// routes
+// API Routes
 app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/recipes", require("./routes/recipe.routes"));
 app.use("/api/admin", require("./routes/admin.routes"));
 
+// Health Check Route
 app.get("/", (req, res) => {
-  res.send("API running");
+  res.json({ status: "API is healthy and running", timestamp: new Date() });
 });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+

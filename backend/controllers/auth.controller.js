@@ -2,19 +2,19 @@ const User = require("../models/User_Model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+const JWT_SECRET = process.env.JWT_SECRET || "recipehub_secret_key_12345";
 
 // SIGNUP
 exports.signup = async (req, res) => {
   try {
-    console.log("REQ BODY:", req.body);
-
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const userExists = await User.findOne({ email });
+    const cleanEmail = email.toLowerCase().trim();
+    const userExists = await User.findOne({ email: cleanEmail });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
@@ -23,7 +23,7 @@ exports.signup = async (req, res) => {
 
     const user = await User.create({
       name,
-      email,
+      email: cleanEmail,
       password: hashedPassword,
       role: role || "user"
     });
@@ -42,8 +42,6 @@ exports.signup = async (req, res) => {
   }
 };
 
-
-
 // LOGIN
 exports.login = async (req, res) => {
   try {
@@ -53,7 +51,8 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Email and password required" });
     }
 
-    const user = await User.findOne({ email });
+    const cleanEmail = email.toLowerCase().trim();
+    const user = await User.findOne({ email: cleanEmail });
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
@@ -65,7 +64,7 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: "7d" }
     );
 
@@ -81,7 +80,8 @@ exports.login = async (req, res) => {
 
   } catch (error) {
     console.error("Login error:", error.message);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
