@@ -13,4 +13,4 @@ const getRecipesFromAPI = async () => {
   }
 };
 
-module.exports = { getRecipesFromAPI };
+module.exports = {getRecipesFromAPI};
